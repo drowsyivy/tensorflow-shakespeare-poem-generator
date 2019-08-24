@@ -111,17 +111,16 @@ loss_summary = tf.summary.scalar("batch_loss", batchloss)
 acc_summary = tf.summary.scalar("batch_accuracy", accuracy)
 summaries = tf.summary.merge([loss_summary, acc_summary])
 
-# Init Tensorboard stuff. This will save Tensorboard information into a different
-# folder at each run named 'log/<timestamp>/'. Two sets of data are saved so that
+# Init Tensorboard stuff. This will save Tensorboard information into a folder
+# for each project named '<project name>_log/'. Two sets of data are saved so that
 # you can compare training and validation curves visually in Tensorboard.
-timestamp = str(math.trunc(time.time()))
-summary_writer = tf.summary.FileWriter("{}_log/".format(project_name) + timestamp + "-training")
-validation_writer = tf.summary.FileWriter("{}_log/".format(project_name) + timestamp + "-validation")
+summary_writer = tf.summary.FileWriter("log/" + project_name + "-training")
+validation_writer = tf.summary.FileWriter("log/" + project_name + "-validation")
 
 # Init for saving models. They will be saved into a directory named 'checkpoints'.
 # Only the last checkpoint is kept.
-if not os.path.exists("{}_checkpoints".format(project_name)):
-    os.mkdir("{}_checkpoints".format(project_name))
+if not os.path.exists("checkpoints"):
+    os.mkdir("checkpoints")
 saver = tf.train.Saver(max_to_keep=1000)
 
 # for display: init the progress bar
@@ -181,7 +180,7 @@ for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_
 
     # save a checkpoint (every 500 batches)
     if step // 10 % _50_BATCHES == 0:
-        saved_file = saver.save(sess, '{}_checkpoints/rnn_train_'.format(project_name) + timestamp, global_step=step)
+        saved_file = saver.save(sess, 'checkpoints/rnn_train_' + project_name, global_step=step)
         print("Saved file: " + saved_file)
 
     # display progress bar
