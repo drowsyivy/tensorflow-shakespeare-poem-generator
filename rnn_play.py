@@ -28,26 +28,16 @@ INTERNALSIZE = 512
 #    - Partially trained, to see how they make progress in training:
 #      https://drive.google.com/file/d/0B5njS_LX6IsDUlFsMkdhclNSazA/view?usp=sharing
 
-shakespeareC0 = "checkpoints/rnn_train_1495455686-0"      # random
-shakespeareC1 = "checkpoints/rnn_train_1495455686-150000"  # lower case gibberish
-shakespeareC2 = "checkpoints/rnn_train_1495455686-300000"  # words, paragraphs
-shakespeareC3 = "checkpoints/rnn_train_1495455686-450000"  # structure of a play, unintelligible words
-shakespeareC4 = "checkpoints/rnn_train_1495447371-15000000"  # better structure of a play, character names (not very good), 4-letter words in correct English
-shakespeareC5 = "checkpoints/rnn_train_1495447371-45000000"  # good names, even when invented (ex: SIR NATHANIS LORD OF SYRACUSE), correct 6-8 letter words
-shakespeareB10 = "checkpoints/rnn_train_1495440473-102000000" # ACT V SCENE IV, [Re-enter KING JOHN with MARDIAN], DON ADRIANO DRAGHAMONE <- invented!
-# most scene directions correct: [Enter FERDINAND] [Dies] [Exit ROSALIND] [To COMINIUS with me] [Enter PRINCE HENRY, and Attendants], correct English.
-
-pythonA0 = "checkpoints/rnn_train_1495458538-300000"  # gibberish
-pythonA1 = "checkpoints/rnn_train_1495458538-1200000"  # some function calls with parameters and ()
-pythonA2 = "checkpoints/rnn_train_1495458538-10200000"  # starts looking Tensorflow Python, nested () and [] not perfect yet
-pythonB10 = "checkpoints/rnn_train_1495458538-201600000"  # can even recite the Apache license
+project_name = "shakespeare" # replace all the shakespeare checkpoint's stamps with "shakespeare" first
+checkpoint_id = "102000000" # the thing at the end after the timestamp
+output_length = 2000
 
 # use topn=10 for all but the last one which works with topn=2 for Shakespeare and topn=3 for Python
-author = shakespeareB10
+author = "checkpoints/rnn_train_{}-{}".format(project_name, run_id)
 
 ncnt = 0
 with tf.Session() as sess:
-    new_saver = tf.train.import_meta_graph('checkpoints/rnn_train_1495455686-0.meta')
+    new_saver = tf.train.import_meta_graph('checkpoints/rnn_train_{}-0.meta'.format(project_name))
     new_saver.restore(sess, author)
     x = my_txtutils.convert_from_alphabet(ord("L"))
     x = np.array([[x]])  # shape [BATCHSIZE, SEQLEN] with BATCHSIZE=1 and SEQLEN=1
@@ -56,8 +46,8 @@ with tf.Session() as sess:
     y = x
     h = np.zeros([1, INTERNALSIZE * NLAYERS], dtype=np.float32)  # [ BATCHSIZE, INTERNALSIZE * NLAYERS]
     file = open("generated_output.txt", "w")
-    file.write("Hi there, this a generated output poem from the shakespeare machine. have fun! \n\n")
-    for i in range(10000):
+    file.write("Roses are red\nViolets are blue\nThis text was generated\nJust for you <3\n\n")
+    for i in range(output_length):
         yo, h = sess.run(['Yo:0', 'H:0'], feed_dict={'X:0': y, 'pkeep:0': 1., 'Hin:0': h, 'batchsize:0': 1})
 
         # If sampling is be done from the topn most likely characters, the generated text
