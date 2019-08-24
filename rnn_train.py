@@ -1,5 +1,5 @@
 # encoding: UTF-8
-# Copyright 2017 Google.com
+# Copyright 2017 Google.com, modifications by their authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,13 +29,13 @@ tf.set_random_seed(0)
 #   Training only:
 #         Leave all the parameters as they are
 #         Disable validation to run a bit faster (set validation=False below)
-#         You can follow progress in Tensorboard: tensorboard --log-dir=log
+#         You can follow progress in Tensorboard: tensorboard --log-dir=(project name)_log
 #   Training and experimentation (default):
 #         Keep validation enabled
-#         You can now play with the parameters anf follow the effects in Tensorboard
+#         You can now play with the parameters and follow the effects in Tensorboard
 #         A good choice of parameters ensures that the testing and validation curves stay close
 #         To see the curves drift apart ("overfitting") try to use an insufficient amount of
-#         training data (shakedir = "shakespeare/t*.txt" for example)
+#         training data (input_dir = "shakespeare/t*.txt" for example)
 #
 SEQLEN = 30
 BATCHSIZE = 200
@@ -44,11 +44,13 @@ INTERNALSIZE = 512
 NLAYERS = 3
 learning_rate = 0.001  # fixed learning rate
 dropout_pkeep = 0.8    # some dropout
+epoch_count = 13
+project_name = "shakespeare"
 
-# load data, either shakespeare, or the Python source of Tensorflow itself
-shakedir = "shakespeare/*.txt"
-#shakedir = "../tensorflow/**/*.py"
-codetext, valitext, bookranges = txt.read_data_files(shakedir, validation=True)
+# load data, from the project subfolder or the Python source of Tensorflow itself
+input_dir = "{}/*.txt".format(project_name)
+#input_dir = "../tensorflow/**/*.py"
+codetext, valitext, bookranges = txt.read_data_files(input_dir, validation=True)
 
 # display some stats on the data
 epoch_size = len(codetext) // (BATCHSIZE * SEQLEN)
@@ -113,13 +115,13 @@ summaries = tf.summary.merge([loss_summary, acc_summary])
 # folder at each run named 'log/<timestamp>/'. Two sets of data are saved so that
 # you can compare training and validation curves visually in Tensorboard.
 timestamp = str(math.trunc(time.time()))
-summary_writer = tf.summary.FileWriter("log/" + timestamp + "-training")
-validation_writer = tf.summary.FileWriter("log/" + timestamp + "-validation")
+summary_writer = tf.summary.FileWriter("{}_log/".format(project_name) + timestamp + "-training")
+validation_writer = tf.summary.FileWriter("{}_log/".format(project_name) + timestamp + "-validation")
 
 # Init for saving models. They will be saved into a directory named 'checkpoints'.
 # Only the last checkpoint is kept.
-if not os.path.exists("checkpoints"):
-    os.mkdir("checkpoints")
+if not os.path.exists("{}_checkpoints".format(project_name)):
+    os.mkdir("{}_checkpoints".format(project_name))
 saver = tf.train.Saver(max_to_keep=1000)
 
 # for display: init the progress bar
@@ -135,7 +137,7 @@ sess.run(init)
 step = 0
 
 # training loop
-for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_epochs=10):
+for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_epochs=epoch_count):
 
     # train on one minibatch
     feed_dict = {X: x, Y_: y_, Hin: istate, lr: learning_rate, pkeep: dropout_pkeep, batchsize: BATCHSIZE}
@@ -179,7 +181,7 @@ for x, y_, epoch in txt.rnn_minibatch_sequencer(codetext, BATCHSIZE, SEQLEN, nb_
 
     # save a checkpoint (every 500 batches)
     if step // 10 % _50_BATCHES == 0:
-        saved_file = saver.save(sess, 'checkpoints/rnn_train_' + timestamp, global_step=step)
+        saved_file = saver.save(sess, '{}_checkpoints/rnn_train_'.format(project_name) + timestamp, global_step=step)
         print("Saved file: " + saved_file)
 
     # display progress bar
